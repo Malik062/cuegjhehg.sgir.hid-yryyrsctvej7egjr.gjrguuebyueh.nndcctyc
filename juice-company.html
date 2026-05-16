@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZEST — Pure. Raw. Alive.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --orange: #FF6200;
+    --lime: #AAEF00;
+    --berry: #FF2D6B;
+    --teal: #00E5C8;
+    --bg: #060606;
+    --bg2: #0D0D0D;
+    --text: #F0EBE0;
+    --muted: rgba(240,235,224,0.45);
+    --card: rgba(255,255,255,0.04);
+  }
+
+  html { scroll-behavior: auto; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── CURSOR ── */
+  #cursor {
+    position: fixed; z-index: 9999; pointer-events: none;
+    width: 12px; height: 12px;
+    background: var(--orange);
+    border-radius: 50%;
+    transform: translate(-50%,-50%);
+    transition: width .2s, height .2s, background .2s;
+    mix-blend-mode: difference;
+  }
+  #cursor-ring {
+    position: fixed; z-index: 9998; pointer-events: none;
+    width: 36px; height: 36px;
+    border: 1px solid rgba(255,98,0,.5);
+    border-radius: 50%;
+    transform: translate(-50%,-50%);
+    transition: all .12s ease;
+  }
+  body:hover #cursor { opacity: 1; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 48px;
+    mix-blend-mode: normal;
+    transition: background .4s, padding .4s;
+  }
+  nav.scrolled {
+    background: rgba(6,6,6,.92);
+    backdrop-filter: blur(20px);
+    padding: 16px 48px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.12em;
+    color: var(--text);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-logo span { color: var(--orange); }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a {
+    color: var(--muted); font-size: .85rem; letter-spacing: .1em;
+    text-transform: uppercase; text-decoration: none;
+    transition: color .2s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: ''; position: absolute; bottom: -4px; left: 0;
+    width: 0; height: 1px; background: var(--orange);
+    transition: width .3s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-cta {
+    background: var(--orange); color: #000; font-weight: 500;
+    padding: 10px 24px; border-radius: 100px; font-size: .85rem;
+    letter-spacing: .08em; text-transform: uppercase; text-decoration: none;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .nav-cta:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255,98,0,.5); }
+
+  /* ── SECTIONS ── */
+  section { position: relative; }
+
+  /* ── HERO ── */
+  #hero {
+    height: 100vh; display: flex; align-items: center;
+    overflow: hidden;
+  }
+  #hero-canvas {
+    position: absolute; inset: 0; z-index: 0;
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    padding: 0 8vw;
+    max-width: 900px;
+  }
+  .hero-eyebrow {
+    font-size: .78rem; letter-spacing: .35em; text-transform: uppercase;
+    color: var(--orange); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero-eyebrow::before {
+    content: ''; width: 40px; height: 1px; background: var(--orange);
+  }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(5rem, 12vw, 11rem);
+    line-height: .92;
+    letter-spacing: -0.01em;
+    margin-bottom: 32px;
+  }
+  .hero-title .outline {
+    -webkit-text-stroke: 1px rgba(240,235,224,.25);
+    color: transparent;
+  }
+  .hero-title .accent { color: var(--orange); }
+  .hero-sub {
+    font-size: 1.1rem; color: var(--muted); max-width: 420px;
+    line-height: 1.7; margin-bottom: 48px;
+    font-weight: 300;
+  }
+  .hero-actions { display: flex; gap: 20px; align-items: center; }
+  .btn-primary {
+    background: var(--orange); color: #000; font-weight: 600;
+    padding: 16px 40px; border-radius: 100px; font-size: .9rem;
+    letter-spacing: .06em; text-transform: uppercase; text-decoration: none;
+    transition: all .25s; display: inline-block;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(255,98,0,.35); }
+  .btn-ghost {
+    color: var(--text); font-size: .9rem; letter-spacing: .06em;
+    text-transform: uppercase; text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+    transition: gap .2s;
+  }
+  .btn-ghost:hover { gap: 16px; }
+  .hero-scroll-hint {
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--muted); font-size: .72rem; letter-spacing: .2em; text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px; height: 60px; background: linear-gradient(to bottom, transparent, var(--orange));
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse { 0%,100% { opacity: .3; transform: scaleY(1); } 50% { opacity: 1; transform: scaleY(1.2); } }
+
+  /* ── TICKER ── */
+  .ticker-wrap {
+    background: var(--orange); overflow: hidden; padding: 14px 0;
+    border-top: 1px solid rgba(0,0,0,.2);
+    border-bottom: 1px solid rgba(0,0,0,.2);
+  }
+  .ticker {
+    display: flex; gap: 0; white-space: nowrap;
+    animation: ticker 18s linear infinite;
+  }
+  .ticker-item {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem; letter-spacing: .12em; color: #000;
+    padding: 0 32px;
+    display: flex; align-items: center; gap: 32px;
+  }
+  .ticker-dot { width: 6px; height: 6px; background: #000; border-radius: 50%; }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* ── PRODUCTS ── */
+  #products { padding: 120px 0; }
+  .section-header {
+    padding: 0 8vw; margin-bottom: 80px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .section-tag {
+    font-size: .72rem; letter-spacing: .35em; text-transform: uppercase;
+    color: var(--orange); margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.8rem, 6vw, 5.5rem);
+    line-height: .95; letter-spacing: .01em;
+  }
+  .section-title em {
+    font-family: 'Playfair Display', serif;
+    font-style: italic; font-weight: 400;
+    color: var(--muted);
+  }
+  .section-desc { max-width: 320px; color: var(--muted); line-height: 1.7; font-size: .92rem; }
+
+  /* product cards horizontal scroll */
+  .products-scroll {
+    display: flex; gap: 24px;
+    padding: 0 8vw;
+    overflow-x: auto; overflow-y: visible;
+    scrollbar-width: none;
+    padding-bottom: 20px;
+  }
+  .products-scroll::-webkit-scrollbar { display: none; }
+
+  .product-card {
+    flex: 0 0 320px; height: 480px;
+    border-radius: 24px;
+    position: relative; overflow: hidden;
+    cursor: pointer;
+    transition: transform .4s cubic-bezier(.23,1,.32,1);
+  }
+  .product-card:hover { transform: translateY(-12px) scale(1.02); }
+
+  .product-card .card-canvas {
+    position: absolute; inset: 0; z-index: 1;
+  }
+  .product-bg {
+    position: absolute; inset: 0; z-index: 0;
+    transition: transform .6s;
+  }
+  .product-card:hover .product-bg { transform: scale(1.08); }
+
+  .card-body {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 3;
+    padding: 32px 28px;
+    background: linear-gradient(to top, rgba(0,0,0,.95) 0%, transparent 100%);
+  }
+  .card-tag {
+    font-size: .68rem; letter-spacing: .3em; text-transform: uppercase;
+    color: rgba(255,255,255,.5); margin-bottom: 8px;
+  }
+  .card-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem; letter-spacing: .08em; margin-bottom: 6px;
+  }
+  .card-desc { font-size: .82rem; color: rgba(255,255,255,.55); line-height: 1.5; margin-bottom: 16px; }
+  .card-price {
+    font-size: 1.4rem; font-weight: 300; color: var(--text);
+  }
+  .card-btn {
+    position: absolute; top: 24px; right: 24px; z-index: 4;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,255,255,.1); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1.3rem; text-decoration: none;
+    transition: all .3s;
+  }
+  .card-btn:hover { background: var(--orange); border-color: var(--orange); }
+  .card-badge {
+    position: absolute; top: 24px; left: 24px; z-index: 4;
+    font-size: .68rem; letter-spacing: .15em; text-transform: uppercase;
+    background: var(--lime); color: #000; font-weight: 600;
+    padding: 5px 12px; border-radius: 100px;
+  }
+
+  /* ── 3D BOTTLE SECTION ── */
+  #bottle-section {
+    height: 100vh; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  #bottle-canvas { position: absolute; inset: 0; z-index: 0; }
+  .bottle-content {
+    position: relative; z-index: 2; text-align: center;
+    pointer-events: none;
+  }
+  .bottle-label {
+    font-size: .72rem; letter-spacing: .4em; text-transform: uppercase;
+    color: var(--lime); margin-bottom: 20px;
+  }
+  .bottle-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 8vw, 7rem);
+    line-height: .9; margin-bottom: 24px;
+  }
+  .bottle-headline span { display: block; }
+  .bottle-sub {
+    font-size: 1rem; color: var(--muted); max-width: 400px; margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* ── PROCESS ── */
+  #process { padding: 140px 0; background: var(--bg2); }
+  .process-steps {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 2px;
+    margin-top: 80px;
+  }
+  .step {
+    padding: 60px 40px;
+    border-right: 1px solid rgba(255,255,255,.06);
+    position: relative; overflow: hidden;
+    transition: background .3s;
+  }
+  .step:last-child { border-right: none; }
+  .step::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--orange) 0%, transparent 100%);
+    opacity: 0; transition: opacity .4s;
+  }
+  .step:hover::before { opacity: .06; }
+  .step-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 5rem; color: rgba(255,255,255,.05); line-height: 1;
+    margin-bottom: 24px; display: block;
+  }
+  .step-icon {
+    width: 52px; height: 52px; border-radius: 16px;
+    background: var(--card); border: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; margin-bottom: 28px;
+  }
+  .step-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem; letter-spacing: .06em; margin-bottom: 14px;
+  }
+  .step-text { font-size: .88rem; color: var(--muted); line-height: 1.7; }
+
+  /* ── STATS ── */
+  #stats {
+    padding: 100px 8vw;
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 2px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .stat { padding: 40px; text-align: center; }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 6vw, 5rem);
+    color: var(--orange); line-height: 1; display: block;
+    margin-bottom: 8px;
+  }
+  .stat-label { font-size: .8rem; color: var(--muted); letter-spacing: .15em; text-transform: uppercase; }
+
+  /* ── ABOUT ── */
+  #about { padding: 140px 8vw; }
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .about-visual {
+    position: relative; height: 600px;
+    border-radius: 32px; overflow: hidden;
+  }
+  #about-canvas { width: 100%; height: 100%; }
+  .about-badge {
+    position: absolute; bottom: 32px; left: 32px;
+    background: rgba(6,6,6,.85); backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 20px; padding: 20px 28px;
+  }
+  .badge-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem; color: var(--lime); line-height: 1;
+  }
+  .badge-text { font-size: .78rem; color: var(--muted); margin-top: 4px; }
+  .about-text .section-tag { margin-bottom: 16px; }
+  .about-text .section-title { margin-bottom: 32px; }
+  .about-body { font-size: .95rem; color: var(--muted); line-height: 1.85; margin-bottom: 24px; }
+  .about-list { list-style: none; display: flex; flex-direction: column; gap: 16px; margin-bottom: 48px; }
+  .about-list li {
+    display: flex; align-items: center; gap: 14px;
+    font-size: .9rem; color: var(--muted);
+  }
+  .about-list li::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--orange); flex-shrink: 0;
+  }
+
+  /* ── TESTIMONIALS ── */
+  #testimonials { padding: 140px 8vw; background: var(--bg2); }
+  .testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 80px; }
+  .testi-card {
+    background: var(--card); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 24px; padding: 40px;
+    transition: transform .3s, border-color .3s;
+  }
+  .testi-card:hover { transform: translateY(-6px); border-color: rgba(255,98,0,.3); }
+  .stars { color: var(--orange); font-size: .9rem; margin-bottom: 20px; letter-spacing: 3px; }
+  .testi-quote { font-size: .95rem; color: var(--muted); line-height: 1.75; margin-bottom: 32px; font-style: italic; }
+  .testi-author { display: flex; align-items: center; gap: 14px; }
+  .author-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: 600; flex-shrink: 0;
+  }
+  .author-name { font-size: .9rem; font-weight: 500; }
+  .author-role { font-size: .75rem; color: var(--muted); }
+
+  /* ── MENU PAGE ── */
+  #menu { padding: 140px 8vw; }
+  .menu-filters { display: flex; gap: 12px; margin-bottom: 60px; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 8px 22px; border-radius: 100px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: transparent; color: var(--muted);
+    font-size: .82rem; letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: var(--orange); border-color: var(--orange); color: #000; font-weight: 600;
+  }
+  .menu-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; }
+  .menu-item {
+    padding: 36px; border: 1px solid rgba(255,255,255,.05);
+    transition: background .2s; position: relative; overflow: hidden;
+  }
+  .menu-item:hover { background: rgba(255,255,255,.03); }
+  .menu-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .menu-item-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: .08em; }
+  .menu-item-price { font-size: 1.1rem; color: var(--orange); font-weight: 300; }
+  .menu-item-desc { font-size: .82rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+  .menu-item-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    font-size: .65rem; letter-spacing: .1em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 100px;
+    background: rgba(255,255,255,.06); color: var(--muted);
+  }
+  .tag.green { background: rgba(170,239,0,.12); color: var(--lime); }
+  .tag.red { background: rgba(255,45,107,.12); color: var(--berry); }
+
+  /* ── CONTACT ── */
+  #contact { padding: 140px 8vw; }
+  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; }
+  .contact-info .section-title { margin-bottom: 32px; }
+  .contact-info p { color: var(--muted); line-height: 1.8; margin-bottom: 40px; font-size: .95rem; }
+  .contact-details { display: flex; flex-direction: column; gap: 24px; }
+  .contact-row { display: flex; align-items: center; gap: 16px; }
+  .contact-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--card); border: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+  }
+  .contact-row-text strong { display: block; font-size: .85rem; margin-bottom: 2px; }
+  .contact-row-text span { font-size: .8rem; color: var(--muted); }
+  .contact-form { display: flex; flex-direction: column; gap: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-label { font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
+  .form-input, .form-textarea {
+    background: var(--card); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px; padding: 16px 20px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .92rem;
+    outline: none; transition: border-color .2s, box-shadow .2s;
+    resize: none;
+  }
+  .form-input:focus, .form-textarea:focus {
+    border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,98,0,.12);
+  }
+  .form-textarea { min-height: 120px; }
+  .form-submit {
+    background: var(--orange); color: #000; font-weight: 600;
+    padding: 16px 40px; border-radius: 100px; font-size: .9rem;
+    letter-spacing: .06em; text-transform: uppercase;
+    border: none; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all .25s; align-self: flex-start;
+  }
+  .form-submit:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(255,98,0,.35); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 80px 8vw 40px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    background: var(--bg);
+  }
+  .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 60px; margin-bottom: 60px; }
+  .footer-brand .nav-logo { font-size: 1.8rem; margin-bottom: 20px; display: flex; }
+  .footer-tagline { font-size: .88rem; color: var(--muted); line-height: 1.7; max-width: 260px; }
+  .footer-col h4 {
+    font-size: .72rem; letter-spacing: .25em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 20px;
+  }
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .footer-links a { font-size: .88rem; color: var(--muted); text-decoration: none; transition: color .2s; }
+  .footer-links a:hover { color: var(--orange); }
+  .footer-bottom {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid rgba(255,255,255,.06); padding-top: 32px;
+    font-size: .78rem; color: var(--muted);
+  }
+  .socials { display: flex; gap: 16px; }
+  .social {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--card); border: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); text-decoration: none; font-size: 1rem;
+    transition: all .2s;
+  }
+  .social:hover { background: var(--orange); color: #000; border-color: var(--orange); }
+
+  /* ── PAGE TRANSITIONS ── */
+  .page { display: none; }
+  .page.active { display: block; }
+  #home-page { display: block; }
+
+  /* ── ANIMATIONS ── */
+  .reveal { opacity: 0; transform: translateY(40px); }
+  .reveal-left { opacity: 0; transform: translateX(-40px); }
+  .reveal-right { opacity: 0; transform: translateX(40px); }
+
+  /* ── MEDIA ── */
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .hero-content { padding: 0 6vw; }
+    .section-header { flex-direction: column; gap: 24px; }
+    .process-steps { grid-template-columns: 1fr 1fr; }
+    #stats { grid-template-columns: 1fr 1fr; padding: 60px 6vw; }
+    .about-grid, .contact-grid { grid-template-columns: 1fr; }
+    .testi-grid { grid-template-columns: 1fr; }
+    .menu-grid { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-logo" onclick="showPage('home')">ZEST<span>.</span></a>
+  <ul class="nav-links">
+    <li><a href="#" onclick="showPage('home');scrollTo('#products')">Products</a></li>
+    <li><a href="#" onclick="showPage('home');scrollTo('#process')">Process</a></li>
+    <li><a href="#" onclick="showPage('menu-page')">Menu</a></li>
+    <li><a href="#" onclick="showPage('home');scrollTo('#about')">About</a></li>
+    <li><a href="#" onclick="showPage('home');scrollTo('#testimonials')">Reviews</a></li>
+  </ul>
+  <a href="#" class="nav-cta" onclick="showPage('home');scrollTo('#contact')">Order Now</a>
+</nav>
+
+<!-- HOME PAGE -->
+<div id="home-page" class="page active">
+
+  <!-- HERO -->
+  <section id="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-content">
+      <div class="hero-eyebrow reveal">Cold-Pressed • Organic • Raw</div>
+      <h1 class="hero-title reveal">
+        <span>PURE</span>
+        <span class="outline">NATURE</span>
+        <span class="accent">ZEST</span>
+      </h1>
+      <p class="hero-sub reveal">Crafted from the finest organic fruits. Every bottle packed with living enzymes, vitamins, and flavor that hits different.</p>
+      <div class="hero-actions reveal">
+        <a href="#products" class="btn-primary">Explore Juices</a>
+        <a href="#" class="btn-ghost" onclick="showPage('menu-page')">See Full Menu →</a>
+      </div>
+    </div>
+    <div class="hero-scroll-hint">
+      <div class="scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <div class="ticker-item">COLD PRESSED<span class="ticker-dot"></span></div>
+      <div class="ticker-item">100% ORGANIC<span class="ticker-dot"></span></div>
+      <div class="ticker-item">NO ADDITIVES<span class="ticker-dot"></span></div>
+      <div class="ticker-item">RAW NUTRITION<span class="ticker-dot"></span></div>
+      <div class="ticker-item">FRESH DAILY<span class="ticker-dot"></span></div>
+      <div class="ticker-item">GLASS BOTTLED<span class="ticker-dot"></span></div>
+      <div class="ticker-item">COLD PRESSED<span class="ticker-dot"></span></div>
+      <div class="ticker-item">100% ORGANIC<span class="ticker-dot"></span></div>
+      <div class="ticker-item">NO ADDITIVES<span class="ticker-dot"></span></div>
+      <div class="ticker-item">RAW NUTRITION<span class="ticker-dot"></span></div>
+      <div class="ticker-item">FRESH DAILY<span class="ticker-dot"></span></div>
+      <div class="ticker-item">GLASS BOTTLED<span class="ticker-dot"></span></div>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <section id="products">
+    <div class="section-header">
+      <div>
+        <div class="section-tag reveal">Our Collection</div>
+        <h2 class="section-title reveal">Signature<br><em>Blends</em></h2>
+      </div>
+      <p class="section-desc reveal">Each blend is crafted with purpose — therapeutic ingredients, peak seasonal fruits, zero compromise.</p>
+    </div>
+    <div class="products-scroll">
+      <!-- Card 1 -->
+      <div class="product-card" style="background: linear-gradient(160deg,#1a0a00,#3d1500);">
+        <div class="card-badge">Bestseller</div>
+        <a href="#" class="card-btn">+</a>
+        <div class="card-body">
+          <div class="card-tag">Citrus Blend</div>
+          <div class="card-name">SOLAR RUSH</div>
+          <div class="card-desc">Orange · Carrot · Ginger · Turmeric</div>
+          <div class="card-price">$8.50</div>
+        </div>
+      </div>
+      <!-- Card 2 -->
+      <div class="product-card" style="background: linear-gradient(160deg,#001a0a,#003d15);">
+        <a href="#" class="card-btn">+</a>
+        <div class="card-body">
+          <div class="card-tag">Green Detox</div>
+          <div class="card-name">FOREST DEEP</div>
+          <div class="card-desc">Kale · Cucumber · Apple · Spirulina</div>
+          <div class="card-price">$9.00</div>
+        </div>
+      </div>
+      <!-- Card 3 -->
+      <div class="product-card" style="background: linear-gradient(160deg,#1a001a,#3d003d);">
+        <div class="card-badge" style="background:var(--berry);color:#fff">New</div>
+        <a href="#" class="card-btn">+</a>
+        <div class="card-body">
+          <div class="card-tag">Berry Boost</div>
+          <div class="card-name">MIDNIGHT</div>
+          <div class="card-desc">Blueberry · Açaí · Pomegranate · Beet</div>
+          <div class="card-price">$9.50</div>
+        </div>
+      </div>
+      <!-- Card 4 -->
+      <div class="product-card" style="background: linear-gradient(160deg,#001a1a,#003d3d);">
+        <a href="#" class="card-btn">+</a>
+        <div class="card-body">
+          <div class="card-tag">Tropical</div>
+          <div class="card-name">LAGOON</div>
+          <div class="card-desc">Mango · Pineapple · Coconut · Lime</div>
+          <div class="card-price">$8.00</div>
+        </div>
+      </div>
+      <!-- Card 5 -->
+      <div class="product-card" style="background: linear-gradient(160deg,#1a1500,#3d3000);">
+        <a href="#" class="card-btn">+</a>
+        <div class="card-body">
+          <div class="card-tag">Immunity</div>
+          <div class="card-name">GOLDEN HOUR</div>
+          <div class="card-desc">Lemon · Ginger · Honey · Black Pepper</div>
+          <div class="card-price">$7.50</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3D BOTTLE SECTION -->
+  <section id="bottle-section">
+    <canvas id="bottle-canvas"></canvas>
+    <div class="bottle-content">
+      <div class="bottle-label reveal">The Science of Fresh</div>
+      <h2 class="bottle-headline reveal">
+        <span>EVERY DROP</span>
+        <span style="color:var(--lime)">MATTERS</span>
+      </h2>
+      <p class="bottle-sub reveal">Cold-pressed at 6°C to lock in nutrients. HPP technology extends freshness without a single preservative.</p>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section id="process">
+    <div style="padding:0 8vw">
+      <div class="section-tag reveal">How We Do It</div>
+      <h2 class="section-title reveal">From Farm<br><em>to Bottle</em></h2>
+    </div>
+    <div class="process-steps">
+      <div class="step reveal">
+        <span class="step-num">01</span>
+        <div class="step-icon">🌱</div>
+        <div class="step-title">Sourced Organic</div>
+        <p class="step-text">Partnered with 40+ certified organic farms across three continents for peak seasonal produce every single day.</p>
+      </div>
+      <div class="step reveal">
+        <span class="step-num">02</span>
+        <div class="step-icon">🧪</div>
+        <div class="step-title">Lab Tested</div>
+        <p class="step-text">Every batch undergoes rigorous quality testing — pesticide, microbial, and nutritional analysis before it's cleared.</p>
+      </div>
+      <div class="step reveal">
+        <span class="step-num">03</span>
+        <div class="step-icon">⚙️</div>
+        <div class="step-title">Cold Pressed</div>
+        <p class="step-text">Our hydraulic cold press extracts maximum juice without heat, keeping enzymes and vitamins alive and intact.</p>
+      </div>
+      <div class="step reveal">
+        <span class="step-num">04</span>
+        <div class="step-icon">📦</div>
+        <div class="step-title">Same-Day Ship</div>
+        <p class="step-text">Bottled in glass, sealed under nitrogen, shipped cold. From press to your door in under 24 hours.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div id="stats">
+    <div class="stat reveal"><span class="stat-num counter" data-target="2.4">0</span><span class="stat-label">Million Bottles Sold</span></div>
+    <div class="stat reveal"><span class="stat-num counter" data-target="40">0</span><span class="stat-label">Farm Partners</span></div>
+    <div class="stat reveal"><span class="stat-num counter" data-target="98">0</span><span class="stat-label">% Customer Satisfaction</span></div>
+    <div class="stat reveal"><span class="stat-num counter" data-target="0">0</span><span class="stat-label">Artificial Preservatives</span></div>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="about-grid">
+      <div class="about-visual reveal-left">
+        <canvas id="about-canvas"></canvas>
+        <div class="about-badge">
+          <div class="badge-num">2016</div>
+          <div class="badge-text">Founded in Brooklyn, NY</div>
+        </div>
+      </div>
+      <div class="about-text">
+        <div class="section-tag reveal">Our Story</div>
+        <h2 class="section-title reveal">Obsessed with<br><em>Real Flavor</em></h2>
+        <p class="about-body reveal">We started ZEST in a Brooklyn kitchen, tired of "healthy" drinks that tasted like compromises. Two founders, one cold press, and a mission: make juice that actually tastes extraordinary.</p>
+        <p class="about-body reveal">Today, we're still obsessed. Every recipe is tweaked relentlessly, every farm visit is personal, and every bottle carries the same love as batch one.</p>
+        <ul class="about-list reveal">
+          <li>Certified USDA Organic across all product lines</li>
+          <li>1% of revenue donated to reforestation programs</li>
+          <li>Carbon-neutral operations since 2021</li>
+          <li>Zero plastic — 100% glass and compostable packaging</li>
+        </ul>
+        <a href="#" class="btn-primary reveal">Learn More About Us</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section id="testimonials">
+    <div class="section-header">
+      <div>
+        <div class="section-tag">Real Reviews</div>
+        <h2 class="section-title">People <em>Love</em><br>Their Juice</h2>
+      </div>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card reveal">
+        <div class="stars">★★★★★</div>
+        <p class="testi-quote">"Solar Rush is legitimately the best thing I've put in my body. I wake up looking forward to it. That's how good this is."</p>
+        <div class="testi-author">
+          <div class="author-avatar" style="background:linear-gradient(135deg,#FF6200,#ff9500)">S</div>
+          <div><div class="author-name">Sarah K.</div><div class="author-role">Yoga Instructor, NYC</div></div>
+        </div>
+      </div>
+      <div class="testi-card reveal">
+        <div class="stars">★★★★★</div>
+        <p class="testi-quote">"Switched from a premium brand and never looked back. The flavor difference is night and day. ZEST is the real deal."</p>
+        <div class="testi-author">
+          <div class="author-avatar" style="background:linear-gradient(135deg,#AAEF00,#5cb800)">M</div>
+          <div><div class="author-name">Marcus D.</div><div class="author-role">Personal Trainer</div></div>
+        </div>
+      </div>
+      <div class="testi-card reveal">
+        <div class="stars">★★★★★</div>
+        <p class="testi-quote">"I've been cleansing with ZEST for three years. My energy levels, skin, everything — transformed. Worth every penny."</p>
+        <div class="testi-author">
+          <div class="author-avatar" style="background:linear-gradient(135deg,#FF2D6B,#ff6b9d)">A</div>
+          <div><div class="author-name">Aisha P.</div><div class="author-role">Nutritionist</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="contact-grid">
+      <div class="contact-info">
+        <div class="section-tag reveal">Get In Touch</div>
+        <h2 class="section-title reveal">Let's Talk<br><em>Juice</em></h2>
+        <p class="reveal">Wholesale inquiries, custom cleanse programs, event catering, or just saying hi — we'd love to hear from you.</p>
+        <div class="contact-details reveal">
+          <div class="contact-row">
+            <div class="contact-icon">📍</div>
+            <div class="contact-row-text">
+              <strong>Visit Us</strong>
+              <span>82 Brooklyn Ave, New York, NY 11201</span>
+            </div>
+          </div>
+          <div class="contact-row">
+            <div class="contact-icon">📧</div>
+            <div class="contact-row-text">
+              <strong>Email</strong>
+              <span>hello@zestjuice.co</span>
+            </div>
+          </div>
+          <div class="contact-row">
+            <div class="contact-icon">📞</div>
+            <div class="contact-row-text">
+              <strong>Phone</strong>
+              <span>+1 (718) 555 0192</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal-right">
+        <div class="contact-form">
+          <div class="form-group">
+            <label class="form-label">Your Name</label>
+            <input class="form-input" type="text" placeholder="Jane Smith">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" type="email" placeholder="jane@email.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subject</label>
+            <input class="form-input" type="text" placeholder="Wholesale inquiry">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea class="form-textarea" placeholder="Tell us what's on your mind..."></textarea>
+          </div>
+          <button class="form-submit">Send Message</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- end home-page -->
+
+<!-- MENU PAGE -->
+<div id="menu-page" class="page" style="padding-top:100px;">
+  <section id="menu">
+    <div class="section-header">
+      <div>
+        <div class="section-tag">Full Menu</div>
+        <h2 class="section-title">The Complete<br><em>Collection</em></h2>
+      </div>
+      <p class="section-desc">All juices cold-pressed daily. Prices include glass deposit, refunded on return.</p>
+    </div>
+    <div class="menu-filters">
+      <button class="filter-btn active">All</button>
+      <button class="filter-btn">Citrus</button>
+      <button class="filter-btn">Green</button>
+      <button class="filter-btn">Berry</button>
+      <button class="filter-btn">Tropical</button>
+      <button class="filter-btn">Immunity</button>
+      <button class="filter-btn">Cleanse</button>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-item">
+        <div class="menu-item-header"><div class="menu-item-name">SOLAR RUSH</div><div class="menu-item-price">$8.50</div></div>
+        <div class="menu-item-desc">Orange, carrot, ginger, turmeric. A bright, warming citrus hit that energizes without the crash.</div>
+        <div class="menu-item-tags"><span class="tag green">Vegan</span><span class="tag green">GF</span><span class="tag">750ml</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-item-header"><div class="menu-item-name">FOREST DEEP</div><div class="menu-item-price">$9.00</div></div>
+        <div class="menu-item-desc">Kale, cucumber, apple, spirulina, lemon. The ultimate green detox. Tastes cleaner than it sounds.</div>
+        <div class="menu-item-tags"><span class="tag green">Vegan</span><span class="tag green">Raw</span><span class="tag">750ml</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-item-header"><div class="menu-item-name">MIDNIGHT</div><div class="menu-item-price">$9.50</div></div>
+        <div class="menu-item-desc">Blueberry, açaí, pomegranate, beet. Antioxidant-dense and deeply satisfying. A berry lover's dream.</div>
+        <div class="menu-item-tags"><span class="tag red">New</span><span class="tag green">Vegan</span><span class="tag">500ml</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-item-header"><div class="menu-item-name">LAGOON</div><div class="menu-item-price">$8.00</div></div>
+        <div class="menu-item-desc">Mango, pineapple, coconut water, lime. Tropical paradise in a bottle. Electrolyte-rich.</div>
+        <div class="menu-item-tags"><span class="tag green">Vegan</span><span class="tag green">GF</span><span class="tag">750ml</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-item-header"><div class="menu-item-name">GOLDEN HOUR</div><div class="menu-item-price">$7.50</div></div>
+        <div class="menu-item-desc">Lemon, ginger, raw honey, black pepper, cayenne. The immunity shot, but a full drink.</div>
+        <div class="menu-item-tags"><span class="tag green">GF</span><span class="tag">500ml</span><span class="tag">Spicy</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-item-header"><div class="menu-item-name">RUBY GLOW</div><div class="menu-item-price">$8.00</div></div>
+        <div class="menu-item-desc">Watermelon, strawberry, hibiscus, rose water. Light, floral, impossibly refreshing.</div>
+        <div class="menu-item-tags"><span class="tag green">Vegan</span><span class="tag green">Raw</span><span class="tag">750ml</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-item-header"><div class="menu-item-name">EARTH RESET</div><div class="menu-item-price">$10.00</div></div>
+        <div class="menu-item-desc">Celery, cucumber, fennel, parsley, apple. The cleanser. A full gut reset in one bottle.</div>
+        <div class="menu-item-tags"><span class="tag green">Cleanse</span><span class="tag green">Vegan</span><span class="tag">1L</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-item-header"><div class="menu-item-name">HALO</div><div class="menu-item-price">$8.50</div></div>
+        <div class="menu-item-desc">White grape, green apple, aloe vera, mint. Gently sweet, cooling, great for digestion.</div>
+        <div class="menu-item-tags"><span class="tag green">Vegan</span><span class="tag">750ml</span><span class="tag">Low Sugar</span></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-item-header"><div class="menu-item-name">FIRE STARTER</div><div class="menu-item-price">$6.00</div></div>
+        <div class="menu-item-desc">Straight ginger, lemon, black pepper. Two-ounce shot. One sip and you'll know why it's called that.</div>
+        <div class="menu-item-tags"><span class="tag red">Shot</span><span class="tag green">GF</span><span class="tag">60ml</span></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER (shared) -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a href="#" class="nav-logo" onclick="showPage('home')">ZEST<span style="color:var(--orange)">.</span></a>
+      <p class="footer-tagline">Organic cold-pressed juices made with obsession and no shortcuts. Since 2016.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Products</h4>
+      <ul class="footer-links">
+        <li><a href="#">Juice Blends</a></li>
+        <li><a href="#">Cleanses</a></li>
+        <li><a href="#">Shots</a></li>
+        <li><a href="#">Bundles</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul class="footer-links">
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Farms</a></li>
+        <li><a href="#">Sustainability</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul class="footer-links">
+        <li><a href="#">Wholesale</a></li>
+        <li><a href="#">FAQ</a></li>
+        <li><a href="#">Shipping</a></li>
+        <li><a href="#">Returns</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 ZEST Juice Co. All rights reserved.</span>
+    <div class="socials">
+      <a href="#" class="social">𝕏</a>
+      <a href="#" class="social">📷</a>
+      <a href="#" class="social">▶</a>
+      <a href="#" class="social">in</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── PAGE MANAGEMENT ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; p.classList.remove('active'); });
+  const page = document.getElementById(id === 'home' ? 'home-page' : id);
+  if (page) { page.style.display = 'block'; page.classList.add('active'); window.scrollTo(0,0); }
+}
+function scrollTo(sel) {
+  setTimeout(() => { const el = document.querySelector(sel); if(el) el.scrollIntoView({behavior:'smooth'}); }, 100);
+}
+
+// ── CURSOR ──
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px';
+  ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px';
+});
+document.querySelectorAll('a,button').forEach(el => {
+  el.addEventListener('mouseenter', () => { cursor.style.width='20px'; cursor.style.height='20px'; ring.style.width='56px'; ring.style.height='56px'; });
+  el.addEventListener('mouseleave', () => { cursor.style.width='12px'; cursor.style.height='12px'; ring.style.width='36px'; ring.style.height='36px'; });
+});
+
+// ── NAV SCROLL ──
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ── MENU FILTERS ──
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// ── GSAP SCROLL REVEALS ──
+gsap.registerPlugin(ScrollTrigger);
+function animateReveal(sel, vars) {
+  gsap.utils.toArray(sel).forEach(el => {
+    gsap.fromTo(el, { opacity: 0, ...vars.from }, {
+      opacity: 1, ...vars.to, duration: 1, ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 88%', once: true }
+    });
+  });
+}
+animateReveal('.reveal', { from: { y: 50 }, to: { y: 0 } });
+animateReveal('.reveal-left', { from: { x: -60 }, to: { x: 0 } });
+animateReveal('.reveal-right', { from: { x: 60 }, to: { x: 0 } });
+
+// counter animation
+gsap.utils.toArray('.counter').forEach(el => {
+  const target = parseFloat(el.dataset.target);
+  ScrollTrigger.create({
+    trigger: el, start: 'top 85%', once: true,
+    onEnter: () => {
+      gsap.to({ val: 0 }, {
+        val: target, duration: 2.2, ease: 'power2.out',
+        onUpdate: function() { el.textContent = target % 1 !== 0 ? this.targets()[0].val.toFixed(1) : Math.round(this.targets()[0].val); }
+      });
+    }
+  });
+});
+
+// ── THREE.JS HERO ──
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+  camera.position.set(0, 0, 6);
+
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize(); new ResizeObserver(resize).observe(canvas);
+
+  // Ambient + directional lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+  const dir = new THREE.DirectionalLight(0xFF6200, 2.5);
+  dir.position.set(3, 4, 5); scene.add(dir);
+  const dir2 = new THREE.DirectionalLight(0xAAEF00, 1.2);
+  dir2.position.set(-4, -2, 3); scene.add(dir2);
+  const pLight = new THREE.PointLight(0xFF2D6B, 1.5, 20);
+  pLight.position.set(-5, 3, 2); scene.add(pLight);
+
+  // Central bottle (cylinder)
+  const bottleGroup = new THREE.Group();
+  const bodyGeo = new THREE.CylinderGeometry(0.55, 0.65, 2.8, 32);
+  const bodyMat = new THREE.MeshPhysicalMaterial({
+    color: 0xFF6200, metalness: 0.1, roughness: 0.05,
+    transmission: 0.85, transparent: true, thickness: 2, ior: 1.5
+  });
+  bottleGroup.add(new THREE.Mesh(bodyGeo, bodyMat));
+
+  const neckGeo = new THREE.CylinderGeometry(0.22, 0.52, 0.7, 32);
+  const neckMat = new THREE.MeshPhysicalMaterial({ color: 0xFF6200, metalness: 0.1, roughness: 0.05, transmission: 0.85, transparent: true, thickness: 1 });
+  const neck = new THREE.Mesh(neckGeo, neckMat);
+  neck.position.y = 1.75; bottleGroup.add(neck);
+
+  const capGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.3, 32);
+  const capMat = new THREE.MeshStandardMaterial({ color: 0x1a0800, roughness: 0.3 });
+  const cap = new THREE.Mesh(capGeo, capMat);
+  cap.position.y = 2.25; bottleGroup.add(cap);
+
+  bottleGroup.position.set(3, 0, 0); scene.add(bottleGroup);
+
+  // Floating fruit spheres
+  const colors = [0xFF6200, 0xAAEF00, 0xFF2D6B, 0x00E5C8, 0xFFAA00, 0x7FFF00];
+  const fruits = [];
+  for (let i = 0; i < 18; i++) {
+    const r = 0.12 + Math.random() * 0.22;
+    const geo = Math.random() > 0.4
+      ? new THREE.SphereGeometry(r, 16, 16)
+      : new THREE.IcosahedronGeometry(r, 1);
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: colors[i % colors.length],
+      metalness: 0.2, roughness: 0.1,
+      transmission: Math.random() > 0.5 ? 0.6 : 0,
+      transparent: true, thickness: 1
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 4 - 1);
+    mesh.userData = { ox: mesh.position.x, oy: mesh.position.y, speed: 0.3 + Math.random() * 0.8, phase: Math.random() * Math.PI * 2 };
+    scene.add(mesh); fruits.push(mesh);
+  }
+
+  // Particle field
+  const particleGeo = new THREE.BufferGeometry();
+  const count = 300;
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 20;
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const particleMat = new THREE.PointsMaterial({ color: 0xFF6200, size: 0.025, transparent: true, opacity: 0.5 });
+  scene.add(new THREE.Points(particleGeo, particleMat));
+
+  let mouse = { x: 0, y: 0 };
+  document.addEventListener('mousemove', e => {
+    mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
+    mouse.y = -(e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  let t = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.012;
+    bottleGroup.rotation.y = t * 0.5 + mouse.x * 0.3;
+    bottleGroup.rotation.x = mouse.y * 0.15;
+    bottleGroup.position.y = Math.sin(t * 0.6) * 0.3;
+    fruits.forEach(f => {
+      f.position.y = f.userData.oy + Math.sin(t * f.userData.speed + f.userData.phase) * 0.4;
+      f.position.x = f.userData.ox + Math.cos(t * f.userData.speed * 0.7 + f.userData.phase) * 0.2;
+      f.rotation.x += 0.008; f.rotation.y += 0.005;
+    });
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+// ── THREE.JS BOTTLE SECTION ──
+(function() {
+  const canvas = document.getElementById('bottle-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0, 8);
+
+  function resize() {
+    const w = canvas.clientWidth || window.innerWidth;
+    const h = canvas.clientHeight || window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  resize(); new ResizeObserver(resize).observe(canvas);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+  const l1 = new THREE.PointLight(0xAAEF00, 4, 30); l1.position.set(-4, 3, 4); scene.add(l1);
+  const l2 = new THREE.PointLight(0xFF6200, 3, 25); l2.position.set(4, -2, 3); scene.add(l2);
+  const l3 = new THREE.PointLight(0x00E5C8, 2, 20); l3.position.set(0, 4, 2); scene.add(l3);
+
+  // Large central bottle
+  const g = new THREE.Group();
+
+  const bMat = new THREE.MeshPhysicalMaterial({
+    color: 0xAAEF00, metalness: 0, roughness: 0.0,
+    transmission: 0.9, transparent: true, thickness: 3, ior: 1.6,
+    clearcoat: 1, clearcoatRoughness: 0
+  });
+
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.85, 3.5, 48), bMat); g.add(body);
+  const neck2 = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.68, 0.9, 32), bMat);
+  neck2.position.y = 2.2; g.add(neck2);
+  const cap2 = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.4, 32), new THREE.MeshStandardMaterial({ color: 0x0d2200, roughness: 0.2, metalness: 0.5 }));
+  cap2.position.y = 2.8; g.add(cap2);
+
+  scene.add(g);
+
+  // Liquid inside
+  const liqMat = new THREE.MeshStandardMaterial({ color: 0x88cc00, transparent: true, opacity: 0.6, roughness: 0.1 });
+  const liquid = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.78, 3.2, 32), liqMat);
+  liquid.position.y = -0.15; g.add(liquid);
+
+  // Ring particles around bottle
+  const ringGeo = new THREE.BufferGeometry();
+  const rCount = 120;
+  const rPos = new Float32Array(rCount * 3);
+  const rAngles = new Float32Array(rCount);
+  const rRadii = new Float32Array(rCount);
+  for (let i = 0; i < rCount; i++) {
+    rAngles[i] = (i / rCount) * Math.PI * 2;
+    rRadii[i] = 2.5 + (Math.random() - 0.5) * 1.5;
+    rPos[i*3] = Math.cos(rAngles[i]) * rRadii[i];
+    rPos[i*3+1] = (Math.random() - 0.5) * 6;
+    rPos[i*3+2] = Math.sin(rAngles[i]) * rRadii[i];
+  }
+  ringGeo.setAttribute('position', new THREE.BufferAttribute(rPos, 3));
+  const ringPts = new THREE.Points(ringGeo, new THREE.PointsMaterial({ color: 0xAAEF00, size: 0.06, transparent: true, opacity: 0.7 }));
+  scene.add(ringPts);
+
+  let scroll = 0;
+  window.addEventListener('scroll', () => { scroll = window.scrollY; });
+
+  let t = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.01;
+    g.rotation.y = t * 0.4;
+    g.position.y = Math.sin(t * 0.5) * 0.3;
+
+    // update ring particles
+    const pos = ringGeo.attributes.position.array;
+    for (let i = 0; i < rCount; i++) {
+      const angle = rAngles[i] + t * 0.3;
+      pos[i*3] = Math.cos(angle) * rRadii[i];
+      pos[i*3+2] = Math.sin(angle) * rRadii[i];
+    }
+    ringGeo.attributes.position.needsUpdate = true;
+    ringPts.rotation.y = t * 0.1;
+
+    l1.position.x = Math.sin(t * 0.7) * 5;
+    l2.position.x = Math.cos(t * 0.5) * 5;
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+// ── THREE.JS ABOUT CANVAS ──
+(function() {
+  const canvas = document.getElementById('about-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0, 5);
+
+  function resize() {
+    const w = canvas.clientWidth || 600; const h = canvas.clientHeight || 600;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  resize(); new ResizeObserver(resize).observe(canvas);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+  const pl = new THREE.PointLight(0xFF6200, 3, 20); pl.position.set(3, 3, 3); scene.add(pl);
+  const pl2 = new THREE.PointLight(0xAAEF00, 2, 15); pl2.position.set(-3, -2, 2); scene.add(pl2);
+
+  // Abstract organic shape
+  const sphereGeo = new THREE.SphereGeometry(1.5, 64, 64);
+  const pos = sphereGeo.attributes.position;
+  const originPos = pos.array.slice();
+  const sMat = new THREE.MeshPhysicalMaterial({
+    color: 0xFF6200, metalness: 0, roughness: 0.1,
+    transmission: 0.6, transparent: true, thickness: 2, ior: 1.4
+  });
+  const sphere = new THREE.Mesh(sphereGeo, sMat); scene.add(sphere);
+
+  // Orbiting mini-spheres
+  const orbiters = [];
+  [0xFF6200, 0xAAEF00, 0xFF2D6B, 0x00E5C8].forEach((c, i) => {
+    const m = new THREE.Mesh(
+      new THREE.SphereGeometry(0.18 + Math.random() * 0.14, 16, 16),
+      new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.3 })
+    );
+    m.userData = { angle: (i / 4) * Math.PI * 2, radius: 2.2 + i * 0.2, speed: 0.5 + i * 0.15, yOff: (Math.random() - 0.5) * 1 };
+    scene.add(m); orbiters.push(m);
+  });
+
+  let t = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.012;
+    // Morph sphere
+    for (let i = 0; i < pos.count; i++) {
+      const ox = originPos[i*3], oy = originPos[i*3+1], oz = originPos[i*3+2];
+      const noise = Math.sin(ox * 3 + t) * Math.cos(oy * 2.5 + t * 0.7) * Math.sin(oz * 2 + t * 0.5) * 0.18;
+      pos.array[i*3] = ox + ox * noise;
+      pos.array[i*3+1] = oy + oy * noise;
+      pos.array[i*3+2] = oz + oz * noise;
+    }
+    pos.needsUpdate = true;
+    sphereGeo.computeVertexNormals();
+    sphere.rotation.y = t * 0.3;
+
+    orbiters.forEach(o => {
+      o.userData.angle += 0.008 * o.userData.speed;
+      o.position.x = Math.cos(o.userData.angle) * o.userData.radius;
+      o.position.z = Math.sin(o.userData.angle) * o.userData.radius;
+      o.position.y = Math.sin(o.userData.angle * 2) * o.userData.yOff;
+    });
+    pl.position.x = Math.sin(t * 0.6) * 4;
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>
